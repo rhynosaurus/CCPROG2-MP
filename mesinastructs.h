@@ -59,6 +59,6 @@ typedef struct{
     int *clientCity;                    //points to an array City[] where client can choose a city depending on integer it represents
     client *clientRecommender;          //points to another client from the struct of clients
     Stylist *chosenStylist;             //points to a stylist from the structure made
-    pet ClientPets[5];                  //pets of clients 
+    pet ClientPets[MAX_PETS_OWN];                  //pets of clients 
 }client;
 
