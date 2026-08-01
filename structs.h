@@ -2,7 +2,7 @@
     Description  : Struct definitions and constants for the Pet Salon tracking system.
     Author/s     : MESINA, ANNA GABRIELLA B.    PEREZ, ERIN ALYANNA A.
     Section      : S20F
-    Last Modified: JULY 24, 2026
+    Last Modified: AUGUST 1, 2026
 */
 
 #ifndef PET_SALON_STRUCTS_H
@@ -112,7 +112,7 @@ typedef struct {
     char petName[MAX_NAME_LEN + 1];         // pet name
     petAge PetAge;                          // age of pet, YY years / MM months
     petServicesAvailed ServicesAvailed[5];  // past services availed, max 5
-} pet;
+} Pet;
 
 /* =================================================================
     CLIENT
@@ -124,7 +124,7 @@ typedef struct client {
     int *clientCity;                        // points into City[] array
     struct client *clientRecommender;       // points to another client
     Stylist *chosenStylist;                 // points to a chosen stylist
-    pet ClientPets[MAX_PETS_OWN];           // pets of client
-} client;
+    Pet ClientPets[MAX_PETS_OWN];           // pets of client
+} Client;
 
 #endif
