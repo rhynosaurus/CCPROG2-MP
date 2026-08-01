@@ -112,6 +112,7 @@ typedef struct {
     char petName[MAX_NAME_LEN + 1];         // pet name
     petAge PetAge;                          // age of pet, YY years / MM months
     petServicesAvailed ServicesAvailed[5];  // past services availed, max 5
+    int numServicesAvailed                  //counts the number of services availed previously
 } Pet;
 
 /* =================================================================
@@ -125,6 +126,7 @@ typedef struct client {
     struct client *clientRecommender;       // points to another client
     Stylist *chosenStylist;                 // points to a chosen stylist
     Pet ClientPets[MAX_PETS_OWN];           // pets of client
+    int numPets;                            // total number of pets owned by client         
 } Client;
 
 #endif

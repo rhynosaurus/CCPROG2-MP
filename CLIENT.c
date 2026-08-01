@@ -1,5 +1,5 @@
 #include "structs.h"
-#define NULL 0
+
 /*====================================
              ADD CLIENT
 ======================================*/
@@ -10,16 +10,17 @@ This function takes in an input for the Client's city or municipality by choosin
 
 @ param ClientTag[] : Array of the Client struct
 return : none
+@ pre : clientCity is already initialized as input from the main menu
 -------------------------------------*/
 void chooseCity(char *clientCity)
 {
-    char *City[]={"Manila","Mandaluyong","Marikina","Pasig","Quezon City",
+    char *City[]={"Manila","Mandaluyong","Marikina","Pasig","Quezon City",                  //Array of cities to choose from
                         "San Juan", "Caloocan", "Malabon", "Navotas", "Valenzuela",
                         "Las Piñas", "Makati", "Muntinlupa", "Parañaque", "Pasay",
                         "Pateros", "Taguig"};
-    int i, j, 
-        index,
-        id_city;
+    int i, j,                                                                               //loop counters
+        index,                                                                              //number of the city to choose from
+        id_city;                                                                            //id of the city chosen from the array
     
     printf("Choose City/Municipality:\n");
     for(i=0;i<4;i++){
@@ -45,12 +46,13 @@ This function takes in an input for the Client's recommender by choosing from th
 @ param ClientTag[] : Array of the Client struct
 @ param numClients  : total number of clients currently stored inside the array of clients
 return : The id number of the client
+@ pre : numClient is a non-negative integer and initialized; Client array is initialized ; currentID is a non-negative integer
 -------------------------------------*/
 Client *selectRecommender(Client ClientTag[], int numClients, int currentID)
 {    
-    int i,
-        choice=0;
-    Client *id_recommender = NULL;
+    int i,                              //loop counter
+        choice;                         //id of chosen client recommender 
+    Client *id_recommender = NULL;      //initiate id_recommender to NULL as default indicating no recommender chosen yet
 
     printf("Recommender: \n");
     if(numClients==0){                  //no clients input yet
@@ -80,10 +82,11 @@ Point-accumulation recursion starting at a new client's recommender, then pick w
 @ param Stylist[]   : Array of stylist
 @ param numStylist  : Total number of stylist in record
 return              : pointer to recommended stylist
+@ pre               : all array and variables are initialized and existing records
 ------------------------------------------------------------------*/
 Stylist* stylistSelectByPoints(Stylist Stylist[], int *numStylist)
 {
-    int points[MAX_STYLISTS]={};
+    int points[MAX_STYLISTS]={};                //
     int i, best_id;
 
     //function to accumulateStylistPoints
@@ -103,11 +106,12 @@ This function takes in an input for the Client's city or municipality by choosin
 
 @ param ClientTag[] : Array of the Client struct
 return : The character string of City chosen
+@ pre  : all array and variables are initialized and existing records
 -------------------------------------*/
 Stylist* chooseStylist(Stylist StylistTag[], int numStylist)
 {
-    int i,
-        id_stylist;
+    int i,                      //loop counter
+        id_stylist;             //id of chosen stylist
 
     printf("Stylist:\n");
 
@@ -130,13 +134,14 @@ be assigned in sequential order.
 @ param ClientTag[] : Array of the Client struct
 @ param numClient   : Total number of existing clients recorded
 return : integer of ID number to be assigned
+@ pre : all variables and array are initialized and existing already
 -------------------------------------*/
 int newClientID(Client Client[], int numClient)
 {
     int i,
         id=0;
 
-    if(numClient>=MAX_CLIENTS){
+    if(numClient>=MAX_CLIENTS){            //current clients is at its max record
         return -1;
     }    
 
@@ -164,6 +169,7 @@ within the database of Clients including their pets to be added aside from the A
 @ param numStylist  : total number of stylists currently stored inside the array of clients
 @ param Pet[]       : Array of Pets
 return : none
+@ pre : all variables and array are initialized and existing already
 -------------------------------------*/
 void addClient(Client Client[], int *numClients, Stylist Stylist[], int numStylist)
 {
@@ -193,14 +199,15 @@ void addClient(Client Client[], int *numClients, Stylist Stylist[], int numStyli
 
         //Stylist selection
         printf("Stylist:\n");
+        /*
         if(Client[current_id].clientRecommender!=NULL){
-            Client[current_id].chosenStylist=stylistSelectByPoints(Client[current_id].clientRecommender,Stylist,numStylist);
+            Client[current_id].chosenStylist=stylistSelectByPoints(Stylist,numStylist);
 
-            printf("%s\n", Client[current_id].chosenStylist->name);
-        }else{
+            printf("%s\n", Client[current_id].chosenStylist->name);*/
+        
             printf("No recommender, pick from list below:\n");
             Client[current_id].chosenStylist=chooseStylist(Stylist,numStylist);
-        }
+        
 
         //Pets of Client
         printf("Pets of Client\n");
@@ -209,17 +216,28 @@ void addClient(Client Client[], int *numClients, Stylist Stylist[], int numStyli
             for(i=0;i<numPetsToAssign;i++)
                 addPetClient(Client,current_id,current_id+1);
     }
-    (*numClients)+=1;
+    (*numClients)++;
 }
 
 /*====================================
              EDIT CLIENT
 ======================================*/
 
+/*------------------------------------------------
+EDIT CLIENT SYSTEM
+This function edits an already existing client from the list
+
+@ param Client[]   : Array of the Client struct
+@ param numClient  : Total number of clients as recorded
+@ param Stylist[]  : Array of stylist struct
+@ numStylist       : Total number of already existing stylists
+return : none
+@ pre : all variables and array are initialized and existing already
+------------------------------------------------*/
 void editClient(Client Client[], int numClients, Stylist Stylist[], int numStylist)
 {
-    int i,
-        id_client;
+    int i,                      //loop variable
+        id_client;              //id of client to edit
 
     printf("Select Client to Edit:\n");
     for(i=0;i<numClients;i++){
@@ -264,12 +282,13 @@ This function deletes a chosen client and their respective pets within the syste
 @ param Client[]   : Array of the Client struct
 @ param *numClient : Total number of clients as recorded
 return : none
+@ pre : numClient is a non-negative integer and initialized; Client array is initialized
 ------------------------------------------------*/
 void deleteClient(Client Client[], int *numClient)
 {
-    int i,
-        id_delete;
-    char confirm;
+    int i,                      //loop variable
+        id_delete;              //id# of client to be deleted
+    char confirm;               //confirmation of choice Y = yes N = no
 
     printf("Delete Client:\n\n");
 
@@ -299,7 +318,64 @@ void deleteClient(Client Client[], int *numClient)
             }
 
             *numClient-=1;
-        }
+        } else printf("Deletion cancelled.\n");
     }
 
+}
+
+
+/*=======================================
+    SERVICES AVAILED BY A CLIENT
+=========================================*/
+
+/*------------------------------------------------
+MONTH CONVERTER
+This function converts the month inside the struct of date from int to its string literal afterwards printing its month in string
+
+@ param month : gets the value of month stored inside the date struct to convert it into its string month
+return : none
+@ pre : month is already existing within the date sturct it will point to
+------------------------------------------------*/
+void int_to_date(int month){
+
+    char *monthNames[] = {"January","February","March","April","May","June","July","August","September","October","November","December"};       //array of months
+
+    printf("%s", monthNames[month-1]);
+}
+
+void servicesAvailedbyClient(Client CLIENTS[], int numClients){
+    int i,j;            //loop variables
+    int id_client;      //id of client chosen to be displayed
+    float total=0;      //total price of services availed 
+
+    for(i=0;i<numClients;i++){
+        printf("%d. %s\n", i+1, CLIENTS[i].clientName);
+    }
+    printf("\nEnter choice: ");
+    scanf("%d", &id_client);
+
+    printf("Services Availed by a Client\n\n");
+    printf("Client Info:\n");
+    printf("    Name : %s\n", CLIENTS[id_client-1].clientName);
+    printf("    ID   : %d\n", id_client);
+    printf("    PETS :\n");
+
+    for(i=0;i<CLIENTS[id_client-1].numPets;i++){
+    printf("        Name : %s\n", CLIENTS[id_client-1].ClientPets[i].petName);
+    printf("        ID   : %d\n", CLIENTS[id_client-1].ClientPets[i].id_pet);
+    printf("        Age  : %d years, %d months\n", CLIENTS[id_client-1].ClientPets[i].PetAge.years, CLIENTS[id_client-1].ClientPets[i].PetAge.months);
+    printf("        Services Availed:\n");
+    
+    for(j=0;j<CLIENTS[i].ClientPets[i].numServicesAvailed;j++){
+    printf("            + %s (", CLIENTS[id_client-1].ClientPets[i].ServicesAvailed[j].service_name);
+    int_to_date(CLIENTS[id_client-1].ClientPets[i].ServicesAvailed[j].DateAvailed.month);
+    printf(" %d, %d - ", CLIENTS[id_client-1].ClientPets[i].ServicesAvailed[j].DateAvailed.day, CLIENTS[id_client-1].ClientPets[i].ServicesAvailed[j].DateAvailed.year); 
+
+        //total += 
+
+    }
+    }
+
+    printf("\n Total price of services availed: PHP %.2f\n", total);
+    printf("\n End of Report.\n");
 }

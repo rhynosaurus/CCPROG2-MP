@@ -10,11 +10,12 @@ This function generate Pet IDs everytime new Pets are added into the system
 @ param Client[]  : Array of the Client struct
 @ param numClient : Total number of clients as recorded
 return : interger of ID number to be assigned
+@ pre : numClient is a non-negative integer and initialized; Client array is initialized
 ------------------------------------------------*/
 int newPetID(Client Client[], int numClient)
 {
-    int i, j;
-    int highestID = 0;
+    int i, j;                   //loop counter
+    int highestID = 0;          //ID of the last pet recorded among clients
 
     for(i=0;i<numClient;i++) {
         for(j=0;j<Client[i].numPets;j++){
@@ -33,10 +34,11 @@ This function adds pets into a client's record
 @ param numClient : Total number of clients as recorded
 @ param id_client : The ID number of the client in which the pet will be added to
 return : none
+@ pre : numClient is a non-negative integer and initialized; Client array is initialized; id_client is a non-negative integer
 ------------------------------------------------*/
 void addPetClient(Client Client[], int id_client, int numClient)
 {
-    int indx = Client[id_client].numPets;
+    int indx = Client[id_client].numPets;       //highest index of client's pet
 
     Client[id_client].ClientPets[indx].id_pet = newPetID(Client, numClient);
 
@@ -61,12 +63,13 @@ This function will ask user to input the ID# of the client where a new pet will 
 @ param Client[]  : Array of the Client struct
 @ param numClient : Total number of clients as recorded
 return : none
+@ pre : numClient is a non-negative integer and initialized; Client array is initialized
 ------------------------------------------------*/
 void addPet(Client Client[], int numClient)
 {
 
-    int i,
-        id_client;
+    int i,              //loop counter
+        id_client;      //id of client chosen
 
     printf("Add Pet\n");
     printf("Select client: \n");
@@ -89,11 +92,12 @@ This function displays ALL of the Pets sorted by owners as recorded into the sys
 @ param Client[]  : Array of the Client struct
 @ param numClient : Total number of clients as recorded
 return : none
+@ pre : numClient is a non-negative integer and initialized; Client array is initialized
 ------------------------------------------------*/
 void displayPetsbyOwner(Client Client[], int numClients)
 {
-    int i,j,
-        numPets;
+    int i,j,            //loop counter
+        numPets;        //number of pets of client
 
 
     printf("Pets by Owner\n");
@@ -131,10 +135,11 @@ This function reassigns a pet from its initial owner to a new owner
 @ param id_newClient : ID of the new client where the pet will be reassigned
 @ param id_oldClient : ID of the initial client who owned the pet
 return : none
+@ pre : All variables and arrays are initialized
 ------------------------------------------------*/
 void reassignPet(Client Clients[], int id_pet, int id_newClient, int id_oldClient){
-    Pet movingPet;
-    int i;
+    Pet movingPet;          //gets the whole struct of pet chosen to be moved
+    int i;                  //loop counter
 
     movingPet = Clients[id_oldClient].ClientPets[id_pet];
 
@@ -158,12 +163,17 @@ be either to be edited/changed or to be reassigned to another client within the 
 @ param Client[]  : Array of the Client struct
 @ param numClient : Total number of clients as recorded
 return : none
+@ pre : numClient is a non-negative integer and initialized; Client array is initialized
 ------------------------------------------------*/
 void editPet(Client Client[], int numClients)
 {
 
-    int i, j, count=1,
-        id_pet, tempclient_id, newclient_id, pet_choice=0;
+    int i, j,             //loop counter
+        count,            //indicates the number of pets owned by the client
+        id_pet, 
+        tempclient_id,    //stores a temporary id of a client when moving
+        newclient_id,     //indicates the new client id of where the pet will be reassigned (if so)
+        pet_choice;       //pet of choice to be edited
     char cChoice;
 
     printf("Select pet to edit:\n");
@@ -260,14 +270,16 @@ This function deletes a chosen Pet within the system
 @ param Client[]  : Array of the Client struct
 @ param numClient : Total number of clients as recorded
 return : none
+@ pre : numClient is a non-negative integer and initialized; Client array is initialized
 ------------------------------------------------*/
 void deletePets(Client Client[], int numClients){
-    int i,j,
-        found=0,
-        choice,
-        id_client,
-        id_pet,
-        count=1;
+    int i,j,                //loop counter
+        found=0,            //pet found flag 0 = not found, 1 = found
+        choice,             //choice of pet
+        id_client,          //client of id who owns the pet
+        id_pet,             //id of pet to be found 
+        count;              //temporary counter of pets owned by the client which also indicates the index of each pet by client
+    char confirm;           //confirmation of choice Y = yes N = no
 
     printf("Delete Pet:\n");
     printf("Select pet to delete:\n");
@@ -281,6 +293,7 @@ void deletePets(Client Client[], int numClients){
     printf("Enter Choice: ");
     scanf("%d", &choice);
 
+    //find pet ownership
     count=1;
     for(i=0;i<numClients && !found;i++){
         for(j=0;j<Client[i].numPets && !found;j++){
@@ -293,16 +306,22 @@ void deletePets(Client Client[], int numClients){
         }
     }
 
-    if(found){
-        printf("Pet %s has been removed from the system.\n",Client[id_client].ClientPets[id_pet].petName);
+    if(choice > 0 && choice <= count){
+        printf("\nConfirmation: Are you sure you want to delete %s? <Y/N>: ", Client[id_client].ClientPets[id_pet].petName);
+        scanf(" %c", &confirm);
 
-        for (j=id_pet;j<Client[id_client].numPets-1;j++){
-            Client[id_client].ClientPets[j] = Client[id_client].ClientPets[j+1];
-        }
+        if(confirm == 'Y' || confirm == 'y'){
+            if(found){
+                printf("Pet %s has been removed from the system.\n",Client[id_client].ClientPets[id_pet].petName);
 
-        Client[id_client].numPets--;
+                for (j=id_pet;j<Client[id_client].numPets-1;j++){
+                    Client[id_client].ClientPets[j] = Client[id_client].ClientPets[j+1];
+                }
+
+                Client[id_client].numPets--;
+            }
+
+            printf("Done.\n");
+        } else printf("Deletion cancelled.\n");
     }
-
-    printf("Done.\n");
-
 }
