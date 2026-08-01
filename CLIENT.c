@@ -101,8 +101,8 @@ Stylist* stylistSelectByPoints(Stylist Stylist[], int *numStylist)
 }
 
 /*-----------------------------------
-Client Stylist
-This function takes in an input for the Client's city or municipality by choosing from a list of array of cities
+Choose Stylist
+This function displays a list of active stylist from where a 
 
 @ param ClientTag[] : Array of the Client struct
 return : The character string of City chosen
@@ -111,19 +111,25 @@ return : The character string of City chosen
 Stylist* chooseStylist(Stylist StylistTag[], int numStylist)
 {
     int i,                      //loop counter
-        id_stylist;             //id of chosen stylist
+        id_stylist,             //number of chosen stylist within the active list
+        count = 0;              //count of active stylists
+    int displayIndex[MAX_STYLISTS];     //actual index of active stylist chosen
 
     printf("Stylist:\n");
 
     for(i=0;i<numStylist;i++){
-        if(StylistTag[i].isActive==1)
-            printf("%d. %s\n",i+1,StylistTag[i].name);
+        if(StylistTag[i].isActive==1){
+            printf("%d. %s\n", count+=1, StylistTag[i].name);
+            printf("\n");
+            displayIndex[count] = i;
+            count+=1;
+        }
     }
 
     printf("Enter Choice: ");
     scanf("%d", &id_stylist);
 
-    return &StylistTag[id_stylist-1];
+    return &StylistTag[displayIndex[id_stylist-1]];
 }
 
 /*-----------------------------------
@@ -157,7 +163,6 @@ int newClientID(Client Client[], int numClient)
 
     return id+1;
 }
-
 /*-----------------------------------
 Full implementation of Add Client option
 This function is the full implementation of the Add Client option. This function adds new client data
@@ -168,10 +173,12 @@ within the database of Clients including their pets to be added aside from the A
 @ param Stylist[]   : Array of Stylists
 @ param numStylist  : total number of stylists currently stored inside the array of clients
 @ param Pet[]       : Array of Pets
+@ param name      : String that contains the name of the client in <Lastname>, <Firstname> format
+
 return : none
 @ pre : all variables and array are initialized and existing already
 -------------------------------------*/
-void addClient(Client Client[], int *numClients, Stylist Stylist[], int numStylist)
+void addClient(Client Client[], int *numClients, Stylist Stylist[], int numStylist, const char* name)
 {
     int numPetsToAssign=0,              //number of pets to assign for given client
         current_id=*numClients,         //the current INDEX of the client being added within the array/struct
@@ -189,7 +196,7 @@ void addClient(Client Client[], int *numClients, Stylist Stylist[], int numStyli
 
         //Name
         printf("Name: ");
-        scanf(" %[^\n]",Client[current_id].clientName);
+        sprintf(Client[current_id].clientName,MAX_NAME_LEN+1,"%s",name);
 
         //Choose City/Municipality
         chooseCity(Client[current_id].clientCity);
@@ -223,6 +230,29 @@ void addClient(Client Client[], int *numClients, Stylist Stylist[], int numStyli
              EDIT CLIENT
 ======================================*/
 
+/*
+Find Client ID
+This function finds takes in an ID number and goes through the list of current active Client IDs to match with the target ID 
+
+@ param Client[]   : Array of the Client struct
+@ param numClient  : Total number of clients as recorded
+@ param targetID   : target ID of the client to be found
+@ return : ID/index of the found target client
+@ pre : variables and arrays are intialized with valid values
+*/
+int findClientIndex(Client Clients[], int numClient, int targetID){
+    int i;              //loop counter
+    int found = -1;     //found flag, initialized to -1 as a default index number, if ID is found, i counter will be stored inside found
+
+    for(i=0;i<numClient;i++){
+        if(targetID==Clients[i].id_client){
+            found = i;
+        }
+        i+=1;
+    }
+    return found;
+}
+
 /*------------------------------------------------
 EDIT CLIENT SYSTEM
 This function edits an already existing client from the list
@@ -230,35 +260,39 @@ This function edits an already existing client from the list
 @ param Client[]   : Array of the Client struct
 @ param numClient  : Total number of clients as recorded
 @ param Stylist[]  : Array of stylist struct
-@ numStylist       : Total number of already existing stylists
+@ para numStylist  : Total number of already existing stylists
+@ param name       : String that contains the name of the pet in <Lastname>, <Firstname> format
 return : none
 @ pre : all variables and array are initialized and existing already
 ------------------------------------------------*/
-void editClient(Client Client[], int numClients, Stylist Stylist[], int numStylist)
+void editClient(Client Client[], int numClients, Stylist Stylist[], int numStylist, const char *name)
 {
     int i,                      //loop variable
-        id_client;              //id of client to edit
+        id_client,              //id of client to edit
+        id_choice;
 
     printf("Select Client to Edit:\n");
     for(i=0;i<numClients;i++){
         printf("%d. %s\n", i+1,Client[i].clientName);
     }
     printf("Enter Choice: ");
-    scanf("%d", &id_client);
+    scanf("%d", &id_choice);
+
+    id_client = findClientIndex;
 
     printf("Current data: \n");
-    printf("Name: %s\n",Client[id_client-1].clientName);
-    printf("City/Municipality: %s\n", Client[id_client-1].clientCity);
-    printf("Recommender: %s\n", Client[id_client-1].clientRecommender->clientName);
-    printf("Stylist: %s\n", Client[id_client-1].chosenStylist->name);
-    printf("\n");
+    printf("Name: %s\n",Client[id_client].clientName);
+    printf("City/Municipality: %s\n", Client[id_client].clientCity);
+    printf("Recommender: %s\n", Client[id_client].clientRecommender->clientName);
+    printf("Stylist: \n");
+    chooseStylist(Stylist,numStylist);
 
     //ENTERING NEW DATA
-    printf("New Data:\n");
+    printf("\nNew Data:\n");
 
     //Name
     printf("Name: ");
-    scanf(" %[^\n]",Client[id_client-1].clientName);
+    sprintf(Client[id_client-1].clientName,MAX_NAME_LEN+1,"%s",name);
 
     //Choose City/Municipality
     chooseCity(Client[id_client-1].clientCity);

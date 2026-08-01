@@ -33,17 +33,18 @@ This function adds pets into a client's record
 @ param Client[]  : Array of the Client struct
 @ param numClient : Total number of clients as recorded
 @ param id_client : The ID number of the client in which the pet will be added to
+@ param name      : String that contains the name of the pet in <Lastname>, <Firstname> format
 return : none
 @ pre : numClient is a non-negative integer and initialized; Client array is initialized; id_client is a non-negative integer
 ------------------------------------------------*/
-void addPetClient(Client Client[], int id_client, int numClient)
+void addPetClient(Client Client[], int id_client, int numClient, const char* name)
 {
     int indx = Client[id_client].numPets;       //highest index of client's pet
 
     Client[id_client].ClientPets[indx].id_pet = newPetID(Client, numClient);
 
     printf("Name: ");
-    scanf(" %[^\n]", Client[id_client].ClientPets[indx].petName);  
+    sprintf(Client[id_client].ClientPets[indx].petName,MAX_NAME_LEN+1,"%s",name);  
 
     printf("Age: \n");
     printf("    Years: ");
@@ -154,6 +155,33 @@ void reassignPet(Client Clients[], int id_pet, int id_newClient, int id_oldClien
     Clients[id_newClient].numPets++;
 
 }
+/*
+Find Pet Index
+This function finds the chosen pet's index 
+
+@ param Clients []  : array of clients
+@ param numClients  : total number of clients as recorded
+@ param id_pet      : id of the pet to be found
+@ param *ClientID   : the ID of the owner of the pet's index if found, otherwise set to unchanged 
+@ return : pointer to the matching pet found, otherwise NULL if not found
+*/
+int findPetIndex(Client Clients[], int numClients, int id_pet, int *ClientID){
+
+    int i,j;
+    Pet *result = NULL;
+    int found = 0;
+
+    for(i=0;i<numClients;i++){
+        for(j=0;j<Clients[i].numPets && !found;j++){
+            if(Clients[i].ClientPets[j].id_pet==id_pet){
+                result = &Clients[i].ClientPets[j];
+                *ClientID = i;
+                found = 1;
+            }
+        }
+    }
+    return result;
+}
 
 /*------------------------------------------------
 EDIT PET SYSTEM
@@ -162,10 +190,11 @@ be either to be edited/changed or to be reassigned to another client within the 
 
 @ param Client[]  : Array of the Client struct
 @ param numClient : Total number of clients as recorded
+@ param name      : String that contains the name of the pet in <Lastname>, <Firstname> format
 return : none
 @ pre : numClient is a non-negative integer and initialized; Client array is initialized
 ------------------------------------------------*/
-void editPet(Client Client[], int numClients)
+void editPet(Client Client[], int numClients, const char* name)
 {
 
     int i, j,             //loop counter
@@ -188,77 +217,58 @@ void editPet(Client Client[], int numClients)
     scanf("%d", &pet_choice);
 
     //Find out which client owns the selected pet
-    count=1;
-    for(i=0;i<numClients;i++){
-        for(j=0;j<Client[i].numPets;j++){
-            if(count==pet_choice){
-                tempclient_id=i;
-                id_pet=j;
-            }
-            count++;
-        }
-    }
+    id_pet = findPetIndex(Client,numClients,pet_choice,&tempclient_id);
 
+    if(id_pet==-1){                //pet was not found among records
+        printf("Pet not found.\n");
+    }
+    else 
+    {
     printf("Would you like to reassign the pet <Y/N>: ");
     scanf(" %c",&cChoice);
 
-    //REASSIGN PET
-    if(cChoice=='Y'||cChoice=='y'){
+        //REASSIGN PET
+        if(cChoice=='Y'||cChoice=='y'){
 
         printf("Select new owner: \n");
+
         for(i=0;i<numClients;i++){
-            printf(" %d. %s\n", i+1,Client[i].clientName);
+            if(i != tempclient_id)
+                printf(" %d. %s\n", i+1,Client[i].clientName);
         }
+
         printf("Enter Choice: ");
         scanf("%d", &newclient_id);
         newclient_id-=1;
 
         if(Client[newclient_id].numPets >= MAX_PETS_OWN)
             printf("Current Client's Pets is at MAX\n");
-
+            
+        else{
         reassignPet(Client,id_pet,newclient_id,tempclient_id);
-
         tempclient_id = newclient_id;
         id_pet = Client[newclient_id].numPets-1;
-
-        printf("Current Data:\n");
-        for(i=0;i<Client[tempclient_id].numPets;i++){
-            printf("    Name   :  %s\n", Client[tempclient_id].ClientPets[i].petName);
-            printf("    Age   :  %d years, %d months\n", Client[tempclient_id].ClientPets[i].PetAge.years, Client[tempclient_id].ClientPets[i].PetAge.months);
         }
 
-        printf("New Data:\n");
-        printf("    Name   :  %s\n", Client[tempclient_id].ClientPets[id_pet].petName);
-
-        printf("Age: \n");
-        printf("    Years: %d\n",Client[tempclient_id].ClientPets[id_pet].PetAge.years);
-
-        printf("    Months: %d\n", Client[tempclient_id].ClientPets[id_pet].PetAge.months);
-    }
-    //Simply edit the chosen pet information
-    else{
-        //Current information of the pet chosen to be edited
         printf("Current Data:\n");
-        printf("    Name   :  %s\n", Client[tempclient_id].ClientPets[id_pet].petName);
-        printf("    Age    :  %d years, %d months\n", Client[tempclient_id].ClientPets[id_pet].PetAge.years, Client[tempclient_id].ClientPets[id_pet].PetAge.months);
-
-        //Input new data on the chosen pet to be edited
+        printf("    Name  :  %s\n", Client[tempclient_id].ClientPets[id_pet].petName);
+        printf("    Age   :  %d years, %d months\n",
+           Client[tempclient_id].ClientPets[id_pet].PetAge.years,
+           Client[tempclient_id].ClientPets[id_pet].PetAge.months);
+ 
         printf("New Data:\n");
         printf("Name: ");
-        scanf(" %[^\n]", Client[tempclient_id].ClientPets[id_pet].petName);  
-
+        scanf(" %[^\n]", Client[tempclient_id].ClientPets[id_pet].petName);
         printf("Age: \n");
         printf("    Years: ");
         scanf("%d", &Client[tempclient_id].ClientPets[id_pet].PetAge.years);
-
         printf("    Months: ");
         scanf("%d", &Client[tempclient_id].ClientPets[id_pet].PetAge.months);
+    
+        printf("Done.\n");
+        }     
     }
-
-    printf("Done.\n");
-        
 }
-
 /*====================================
              DELETE PET
 ======================================*/
