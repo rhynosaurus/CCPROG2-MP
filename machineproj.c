@@ -18,7 +18,7 @@
    ================================================================= */
 int   loadStylists(Stylist stylists[], int *stylistCount, int *nextStylistID, const char *filename);
 int   loadServices(Service services[], int *serviceCount, const char *filename);
-int   loadClients(Client clients[], int *clientCount, int *nextClientID, int *nextPetID, const char *filename);
+int   loadClients(Client clients[], int *clientCount, int *nextClientID, const char *filename);
 int   saveStylists(Stylist stylists[], int stylistCount, const char *filename);
 int   saveServices(Service services[], int serviceCount, const char *filename);
 int   saveClients(Client clients[], int clientCount, const char *filename);
@@ -100,7 +100,7 @@ int loadAllData(Stylist stylists[], int *stylistCount, int *nextStylistID, Servi
         status = 0;
     if (!loadServices(services, serviceCount, "services.bin"))
         status = 0;
-    if (!loadClients(clients, clientCount, nextClientID, nextPetID, "clients.bin"))
+    if (!loadClients(clients, clientCount, nextClientID, "clients.bin"))
         status = 0;
 
     return status;
@@ -371,6 +371,8 @@ void addClient(Client clients[], int *numClients, Stylist stylists[], int nStyli
         // Only increment the count if the client was actually added
         (*numClients)++;
         printf("Client and pets successfully recorded.\n");
+
+        saveClients(clients, *numClients, "clients.bin");
     }
 }
 
@@ -481,6 +483,9 @@ void addPet(Client clients[], int nTotalClients) {
             if (petSlotIdx != -1) {
                 addPetClient(clients, clientIdx, petSlotIdx, nTotalClients);
                 printf("Pet record successfully added to %s.\n", clients[clientIdx].clientName);
+
+                saveClients(clients, nTotalClients, "clients.bin");
+
             } else {
                 printf("Error: This client already has the maximum of 5 pets.\n");
             }
@@ -699,6 +704,8 @@ void editClient(Client clients[], int nTotalClients, Stylist stylists[], int nTo
         printf("Select New Preferred Stylist:\n");
         clients[clientIdx].chosenStylist = chooseStylist(stylists, nTotalStylists);
 
+        saveClients(clients, nTotalClients, "clients.bin");
+
         printf("Client record updated successfully.\n");
     }
 }
@@ -809,6 +816,7 @@ void editPet(Client clients[], int nTotalClients) {
             scanf("%d", &clients[foundClientIdx].ClientPets[foundPetIdx].PetAge.months);
             
             printf("Pet record updated.\n");
+            saveClients(clients, nTotalClients, "clients.bin");
         }
     } else {
         printf("No pets currently recorded in the system.\n");
@@ -945,6 +953,9 @@ void deleteClient(Client clients[], int *nTotalClients) {
 
             // Decrement the total client count */
             *nTotalClients -= 1;
+
+            saveClients(clients, nTotalClients, "clients.bin");
+
             printf("Deletion complete.\n");
         } else {
             printf("Deletion cancelled.\n");
@@ -1021,7 +1032,10 @@ void deletePets(Client clients[], int nTotalClients) {
 
                 // Clear the last slot to ensure it is marked as empty
                 clients[foundClientIdx].ClientPets[MAX_PETS_OWN - 1].id_pet = 0;
-                
+                //subtract the number of pets for the client
+                clients[foundClientIdx].numPets--;
+                saveClients(clients, nTotalClients, "clients.bin");
+
                 printf("Done.\n");
             } else {
                 printf("Deletion cancelled.\n");
@@ -1965,9 +1979,16 @@ int loadServices(Service services[], int *serviceCount, const char *filename) {
     @pre                : clients array is initialized so clientCount is non-negative
    ================================================================= */
 int saveClients(Client clients[], int clientCount, const char *filename) {
-    (void)clients;
-    (void)clientCount;
-    (void)filename;
+    FILE *fp = fopen(filename, "wb");
+    
+    if(fp == NULL){
+        return 0;
+    }
+
+    fwrite(&clientCount, sizeof(int), 1, fp);
+    fwrite(clients, sizeof(Client), clientCount, fp);
+
+    fclose(fp);
     return 1;
 }
 
@@ -1978,17 +1999,33 @@ int saveClients(Client clients[], int clientCount, const char *filename) {
     @param clients[]        : Array to load client records into
     @param *clientCount     : Pointer to an integer to store the number of clients loaded
     @param *nextClientID    : Pointer to an integer to store the next available client ID
-    @param *nextPetID       : Pointer to an integer to store the next available pet ID
     @param *filename        : The name of the binary file to load from
     @return                 : 1 if load was successful, 0 otherwise
-    @pre                    : clients array is initialized; clientCount, nextClientID, and next
+    @pre                    : clients array is initialized; clientCount and nextClientID are valid pointers
    ================================================================= */
-int loadClients(Client clients[], int *clientCount, int *nextClientID, int *nextPetID, const char *filename) {
-    (void)clients;
-    (void)filename;
-    *clientCount = 0;
-    if (nextClientID != NULL) *nextClientID = 1;
-    if (nextPetID != NULL) *nextPetID = 1;
+int loadClients(Client clients[], int *clientCount, int *nextClientID, const char *filename) {
+    
+    FILE *fp = fopen(filename, "rb");
+    int i,j;
+    int maxClientID = 0;
+
+    if(fp == NULL){
+        *clientCount = 0;
+        if(nextClientID != NULL) *nextClientID = 1;
+        return 1;
+    }
+
+    fread(clientCount,sizeof(int), 1, fp);
+    fread(clients,sizeof(Client),*clientCount, fp);
+    fclose(fp);
+
+    for(i=0;i<*clientCount;i++){
+        if(clients[i].id_client > maxClientID)
+            maxClientID = clients[i].id_client;
+    }
+
+    if (nextClientID != NULL) *nextClientID = maxClientID + 1;
+
     return 1;
 }
 
@@ -2129,6 +2166,11 @@ int main(void) {
                     break;
                 }
 
+                for(i=0;i<MAX_PETS_OWN;i++){
+                    if(clients[clientIdx].ClientPets[i].id_pet>0){
+                        printf("%d. %s (ID: %d)\n", i + 1, clients[clientIdx].ClientPets[i].petName, clients[clientIdx].ClientPets[i].id_pet);
+                    }
+                }
                 printf("Select Pet Slot (1-%d): ", MAX_PETS_OWN);
                 scanf("%d", &petChoice);
                 if (petChoice < 1 || petChoice > MAX_PETS_OWN ||
