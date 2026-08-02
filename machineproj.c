@@ -2179,8 +2179,15 @@ int main(void) {
                     break;
                 }
 
+                //remove? cause its already set when client is added they're asked to choose a stylist
                 printf("Stylist ID: ");
                 scanf("%d", &stylistID);
+
+                //add a list of services and allow them to choose by its number from the list of services
+                printf("Select Service:\n");
+                for(i=0;i<serviceCount;i++){
+                    printf("%d. %s (PHP %.2f)\n", i + 1, services[i].name, services[i].price);
+                }
                 printf("Service Name: ");
                 scanf(" %200[^\n]", serviceName);
                 printf("Date (day month year): ");
