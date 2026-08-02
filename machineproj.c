@@ -189,7 +189,7 @@ int newClientID(Client clients[], int numClient) {
 void chooseCity(int *selectedCityIndex) {
     char *City[] = {"Manila", "Mandaluyong", "Marikina", "Pasig", "Quezon City",
                     "San Juan", "Caloocan", "Malabon", "Navotas", "Valenzuela",
-                    "Las Piñas", "Makati", "Muntinlupa", "Parañaque", "Pasay",
+                    "Las Pinas", "Makati", "Muntinlupa", "Paranaque", "Pasay",
                     "Pateros", "Taguig"};
     int i;
     int j;
@@ -208,8 +208,12 @@ void chooseCity(int *selectedCityIndex) {
     }
 
     printf("17. Taguig\n");
+    do{
     printf("Enter Choice: ");
     scanf("%d", &choice);
+        if(choice<=0 || choice > 17)
+            printf("City does not exist.\n");
+    }while ( choice<=0 || choice > 17 );
 
     // Store the index (choice - 1) to point into the City array later
     *selectedCityIndex = choice - 1;
@@ -329,18 +333,19 @@ void addClient(Client clients[], int *numClients, Stylist stylists[], int nStyli
         clients[currentIdx].id_client = clientID;
 
         // 2. Name: Stored in format <Lastname>, <Firstname> (up to 200 chars)
-        printf("Name: ");
+        printf("Name (Lastname, Firstname): ");
         scanf(" %200[^\n]", clients[currentIdx].clientName);
 
         // 3. City Selection: Restricted to NCR list
         clients[currentIdx].clientCity = &clientCityStorage[currentIdx];
         chooseCity(clients[currentIdx].clientCity);
+        printf("\n");
 
         // 4. Recommender: Pointer to an existing client or NULL
         clients[currentIdx].clientRecommender = selectRecommender(clients, *numClients, currentIdx);
 
         // 5. Stylist Selection: Use algorithm for Full Requirement
-        printf("Stylist Assignment: ");
+        printf("\nStylist Assignment: ");
         if (clients[currentIdx].clientRecommender != NULL) {
             clients[currentIdx].chosenStylist = stylistSelectByPoints(stylists, nStylists, clients[currentIdx].clientRecommender);
             printf("Recommended based on word-of-mouth: %s\n", clients[currentIdx].chosenStylist->name);
@@ -360,7 +365,7 @@ void addClient(Client clients[], int *numClients, Stylist stylists[], int nStyli
 
         for (i = 0; i < numPetsToAssign; i++) {
             // Add individual pet details to this client's record
-            addPetClient(clients, currentIdx, i, *numClients);
+            addPetClient(clients, currentIdx, i, *numClients+1);
         }
 
         // Only increment the count if the client was actually added
@@ -652,7 +657,7 @@ void editClient(Client clients[], int nTotalClients, Stylist stylists[], int nTo
     int clientIdx;
     char *CityList[] = {"Manila", "Mandaluyong", "Marikina", "Pasig", "Quezon City",
                         "San Juan", "Caloocan", "Malabon", "Navotas", "Valenzuela",
-                        "Las Piñas", "Makati", "Muntinlupa", "Parañaque", "Pasay",
+                        "Las Pinas", "Makati", "Muntinlupa", "Paranaque", "Pasay",
                         "Pateros", "Taguig"};
 
     printf("--- Edit Client Record ---\n");
