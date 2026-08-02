@@ -355,6 +355,12 @@ void addClient(Client clients[], int *numClients, Stylist stylists[], int nStyli
             clients[currentIdx].chosenStylist = chooseStylist(stylists, nStylists);
         }
 
+        //Clear any nonexisting data from all 5 pet slots to avoid duplication of ID
+        for (i = 0; i < MAX_PETS_OWN; i++) {
+            clients[currentIdx].ClientPets[i].id_pet = 0;
+            clients[currentIdx].ClientPets[i].petName[0] = '\0';
+        }
+
         // 6. Pet Entry: At least one pet must be entered at this point
         printf("\n--- Pet Registration ---\n");
         numPetsToAssign = 0;
@@ -939,6 +945,13 @@ void deleteClient(Client clients[], int *nTotalClients) {
             // Inform the user about the client and pet removal
             printf("Client %s has been removed from the system.\n", clients[targetIdx].clientName);
 
+            //NULL its' recommender pointer for all clients that have the deleted client as their recommender
+            for (i = 0; i < *nTotalClients; i++) {
+                if (clients[i].clientRecommender == &clients[targetIdx]) {
+                clients[i].clientRecommender = NULL;
+                }
+            }
+
             // Check through the fixed 5-pet array to announce pet deletion
             for (j = 0; j < MAX_PETS_OWN; j++) {
                 if (clients[targetIdx].ClientPets[j].id_pet > 0) {
@@ -951,10 +964,16 @@ void deleteClient(Client clients[], int *nTotalClients) {
                 clients[i] = clients[i + 1];
             }
 
-            // Decrement the total client count */
+            // Decrement the total client count 
             *nTotalClients -= 1;
 
-            saveClients(clients, nTotalClients, "clients.bin");
+            //ensure the last client record is cleared to avoid duplicate IDs
+            clients[*nTotalClients].id_client = 0;
+            for (j = 0; j < MAX_PETS_OWN; j++) {
+                clients[*nTotalClients].ClientPets[j].id_pet = 0;
+            }
+
+            saveClients(clients, *nTotalClients, "clients.bin");
 
             printf("Deletion complete.\n");
         } else {
@@ -2046,6 +2065,8 @@ int main(void) {
     int running = 1;
     int mainChoice;
 
+    int i;
+
     printf("=== Pet Salon Tracking System ===\n");
     loadAllData(stylists, &stylistCount, &nextStylistID, services, &serviceCount,
                 clients, &clientCount, &nextClientID, &nextPetID);
@@ -2101,6 +2122,12 @@ int main(void) {
                     editPet(clients, clientCount);
                 } else if (editChoice == 3) {
                     int id; char newName[MAX_NAME_LEN + 1];
+
+                    for(i=0;i<stylistCount;i++){
+                        if(stylists[i].isActive==1)
+                        printf("%d. %s\n", stylists[i].stylistID, stylists[i].name);
+                    }
+
                     printf("Stylist ID to edit: ");
                     scanf("%d", &id);
                     printf("New Name: ");
@@ -2109,6 +2136,11 @@ int main(void) {
                 } else if (editChoice == 4) {
                     char name[MAX_NAME_LEN + 1], newDesc[MAX_DESC_LEN + 1];
                     float newPrice;
+
+                    for(i=0;i<serviceCount;i++){
+                        printf("%d. %s (PHP %.2f)\n", i + 1, services[i].name, services[i].price);
+                    }
+
                     printf("Service Name to edit: ");
                     scanf(" %200[^\n]", name);
                     printf("New Description: ");
@@ -2179,9 +2211,9 @@ int main(void) {
                     break;
                 }
 
-                //remove? cause its already set when client is added they're asked to choose a stylist
-                printf("Stylist ID: ");
-                scanf("%d", &stylistID);
+                //no need to ask for stylist to book since the stylist is already chosen by the client
+                stylistID = clients[clientIdx].chosenStylist->stylistID;
+                printf("Stylist: %s\n", clients[clientIdx].chosenStylist->name);
 
                 //add a list of services and allow them to choose by its number from the list of services
                 printf("Select Service:\n");
