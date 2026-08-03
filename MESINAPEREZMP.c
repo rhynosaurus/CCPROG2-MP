@@ -477,6 +477,12 @@ void addClient(Client clients[], int *numClients, Stylist stylists[], int nStyli
             clients[currentIdx].chosenStylist = chooseStylist(stylists, nStylists);
         }
 
+        //Clear any nonexisting data from all 5 pet slots to avoid duplication of ID
+        for (i = 0; i < MAX_PETS_OWN; i++) {
+            clients[currentIdx].ClientPets[i].id_pet = 0;
+            clients[currentIdx].ClientPets[i].petName[0] = '\0';
+        }
+
         // 6. Pet Entry: At least one pet must be entered at this point
         printf("\nPets of Client\n");
         numPetsToAssign = 0;
@@ -1017,10 +1023,10 @@ void editService(Service services[], int serviceCount, const char *name, const c
    ================================================================= */
 void displayDeleteMenu() {
     printf("\nDelete Options:\n");
-    printf("1. Delete Client\n");
-    printf("2. Delete Pet\n");
-    printf("3. Delete Stylist\n");
-    printf("4. Delete Service\n");
+    printf("1. Delete Stylist\n");
+    printf("2. Delete Service\n");
+    printf("3. Delete Client\n");
+    printf("4. Delete Pet\n");
     printf("5. Exit\n");
 }
 
@@ -1068,6 +1074,13 @@ void deleteClient(Client clients[], int *nTotalClients) {
                 }
             }
 
+            //NULL its' recommender pointer for all clients that have the deleted client as their recommender
+            for (i = 0; i < *nTotalClients; i++) {
+                if (clients[i].clientRecommender == &clients[targetIdx]) {
+                clients[i].clientRecommender = NULL;
+                }
+            }
+            
             // Shift subsequent records up by one
             for (i = targetIdx; i < *nTotalClients - 1; i++) {
                 clients[i] = clients[i + 1];
@@ -1075,6 +1088,12 @@ void deleteClient(Client clients[], int *nTotalClients) {
 
             // Decrement the total client count */
             *nTotalClients -= 1;
+
+            clients[*nTotalClients].id_client = 0;
+            for (j = 0; j < MAX_PETS_OWN; j++) {
+                clients[*nTotalClients].ClientPets[j].id_pet = 0;
+            }
+
             printf("Deletion complete.\n");
         } else {
             printf("Deletion cancelled.\n");
