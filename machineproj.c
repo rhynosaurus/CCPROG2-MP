@@ -1513,7 +1513,7 @@ void reportServicesAvailed(Client clients[], int nClients, Service services[], i
     int k;
     int clientChoice;
     int clientIdx;
-    int found = 0;
+    int found;
     float totalSpent = 0.0f;
     FILE *fp = NULL;
     char fileName[100];
@@ -1556,6 +1556,9 @@ void reportServicesAvailed(Client clients[], int nClients, Service services[], i
                     for (j = 0; j < 5; j++) {
                         // Check if a service record exists in this slot
                         if (clients[clientIdx].ClientPets[i].ServicesAvailed[j].service_name[0] != '\0') {
+                            //reset found for every service availed
+                            found = 0;
+                            
                             // Look up price in master list to satisfy price requirement
                             for (k = 0; k < nServices && found == 0; k++) {
                                 if (strcmp(services[k].name, clients[clientIdx].ClientPets[i].ServicesAvailed[j].service_name) == 0) {
@@ -2227,6 +2230,7 @@ int main(void) {
 
                 bookService(stylists, stylistCount, services, serviceCount,
                             &clients[clientIdx].ClientPets[petChoice - 1], stylistID, serviceName, date);
+
                 saveClients(clients, clientCount, "clients.bin");
                 break;
             }
