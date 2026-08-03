@@ -2,7 +2,7 @@
     Description  : C file for the Pet Salon tracking system.
     Author/s     : MESINA, ANNA GABRIELLA B.    PEREZ, ERIN ALYANNA A.
     Section      : S20F
-    Last Modified: AUGUST 2, 2026
+    Last Modified: AUGUST 3, 2026
 */
 
 #include <stdio.h>
@@ -2025,7 +2025,7 @@ int saveClients(Client clients[], int clientCount, const char *filename) {
 int loadClients(Client clients[], int *clientCount, int *nextClientID, const char *filename) {
     
     FILE *fp = fopen(filename, "rb");
-    int i,j;
+    int i;
     int maxClientID = 0;
 
     if(fp == NULL){

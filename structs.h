@@ -112,7 +112,6 @@ typedef struct {
     char petName[MAX_NAME_LEN + 1];         // pet name
     petAge PetAge;                          // age of pet, YY years / MM months
     petServicesAvailed ServicesAvailed[5];  // past services availed, max 5
-    int numServicesAvailed                  //counts the number of services availed previously
 } Pet;
 
 /* =================================================================
