@@ -1,5 +1,5 @@
 /*
-    Description  : C file for the Pet Salon tracking system.
+    Description  : C file for the functions and main of the Pet Salon tracking system.
     Author/s     : MESINA, ANNA GABRIELLA B.    PEREZ, ERIN ALYANNA A.
     Section      : S20F
     Last Modified: AUGUST 3, 2026
@@ -16,39 +16,39 @@
     prototypes at the top lets the compiler know about these
     functions before they are used and prevents errors.
    ================================================================= */
-int   loadStylists(Stylist stylists[], int *stylistCount, int *nextStylistID, const char *filename);
-int   loadServices(Service services[], int *serviceCount, const char *filename);
-int   loadClients(Client clients[], int *clientCount, int *nextClientID, const char *filename);
-int   saveStylists(Stylist stylists[], int stylistCount, const char *filename);
-int   saveServices(Service services[], int serviceCount, const char *filename);
-int   saveClients(Client clients[], int clientCount, const char *filename);
+int loadStylists(Stylist stylists[], int *stylistCount, int *nextStylistID, const char *filename);
+int loadServices(Service services[], int *serviceCount, const char *filename);
+int loadClients(Client clients[], int *clientCount, int *nextClientID, int *nextPetID, const char *filename);
+int saveStylists(Stylist stylists[], int stylistCount, const char *filename);
+int saveServices(Service services[], int serviceCount, const char *filename);
+int saveClients(Client clients[], int clientCount, const char *filename);
 
-int   loadAllData(Stylist stylists[], int *stylistCount, int *nextStylistID, Service services[], int *serviceCount,
-                   Client clients[], int *clientCount, int *nextClientID, int *nextPetID);
-int   saveAllData(Stylist stylists[], int stylistCount, Service services[], int serviceCount, Client clients[], int clientCount);
-int   triggerRecovery(Stylist stylists[], int stylistCount, Service services[], int serviceCount, Client clients[], int clientCount);
+int loadAllData(Stylist stylists[], int *stylistCount, int *nextStylistID, Service services[], int *serviceCount,
+                Client clients[], int *clientCount, int *nextClientID, int *nextPetID);
+int saveAllData(Stylist stylists[], int stylistCount, Service services[], int serviceCount, Client clients[], int clientCount);
+int triggerRecovery(Stylist stylists[], int stylistCount, Service services[], int serviceCount, Client clients[], int clientCount);
 
-void  displayMenu(int hasRecords);
-void  displayAddMenu(void);
-void  displayEditMenu(void);
-void  displayDeleteMenu(void);
-void  displayReportMenu(Client clients[], int nClients, Stylist stylists[], int nStylists, Service services[], int nServices);
+void displayMenu(int hasRecords);
+void displayAddMenu(void);
+void displayEditMenu(void);
+void displayDeleteMenu(void);
+void displayReportMenu(Client clients[], int nClients, Stylist stylists[], int nStylists, Service services[], int nServices);
 
-int      newClientID(Client clients[], int numClient);
-void     chooseCity(int *selectedCityIndex);
-Client*  selectRecommender(Client clients[], int nClients, int currentIdx);
+int newClientID(Client clients[], int numClient);
+void chooseCity(int *selectedCityIndex);
+Client* selectRecommender(Client clients[], int nClients, int currentIdx);
 Stylist* stylistSelectByPoints(Stylist stylists[], int nStylists, Client *pRecommender);
 Stylist* chooseStylist(Stylist stylists[], int numStylists);
-void     accumulatePoints(Client *pClient, int points[], Stylist stylists[], int nStylists);
+void accumulatePoints(Client *pClient, int points[], Stylist stylists[], int nStylists);
 
-void addClient(Client clients[], int *numClients, Stylist stylists[], int nStylists);
-int  newPetID(Client clients[], int numClients);
+void addClient(Client clients[], int *numClients, Stylist stylists[], int nStylists, int clientCityStorage[]);
+int newPetID(Client clients[], int numClients);
 void addPetClient(Client clients[], int clientIdx, int petIdx, int nTotalClients);
 void addPet(Client clients[], int nTotalClients);
 void addStylist(Stylist stylists[], int *stylistCount, int *nextStylistID, const char *name);
 void addService(Service services[], int *serviceCount, const char *name, const char *description, float price);
 
-void editClient(Client clients[], int nTotalClients, Stylist stylists[], int nTotalStylists);
+void editClient(Client clients[], int nTotalClients, Stylist stylists[], int nTotalStylists, int clientCityStorage[]);
 void editPet(Client clients[], int nTotalClients);
 void editStylist(Stylist stylists[], int stylistCount, int stylistID, const char *newName);
 void editService(Service services[], int serviceCount, const char *name, const char *newDescription, float newPrice);
@@ -59,14 +59,14 @@ void deleteStylist(Stylist stylists[], int stylistCount, int stylistID);
 void deleteService(Service services[], int serviceCount, const char *name);
 
 const char* getRankString(StylistRank rank);
-int   stylistActiveCheck(Stylist stylists[], int stylistCount, int stylistID);
-int   validPriceCheck(float price);
-int   findClientIndex(Client clients[], int nTotalClients, int targetID);
-Pet*  findPetIndex(Client clients[], int nTotalClients, int targetPetID, int *pOwnerIdx);
-int   findServiceIndex(Service services[], int serviceCount, const char *serviceName);
+int stylistActiveCheck(Stylist stylists[], int stylistCount, int stylistID);
+int validPriceCheck(float price);
+int findClientIndex(Client clients[], int nTotalClients, int targetID);
+Pet* findPetIndex(Client clients[], int nTotalClients, int targetPetID, int *pOwnerIdx);
+int findServiceIndex(Service services[], int serviceCount, const char *serviceName);
 
-void bookService(Stylist stylists[], int stylistCount, Service services[], int serviceCount, Pet *targetPet, int stylistID,
-                  const char *serviceName, Date date);
+void bookService(Stylist stylists[], int stylistCount, Service services[], int serviceCount, Client clients[], int clientCount,
+                 Pet *targetPet, int stylistID, const char *serviceName, Date date);
 void endMonth(Stylist stylists[], int stylistCount);
 
 void reportServicesAvailed(Client clients[], int nClients, Service services[], int nServices);
@@ -100,7 +100,7 @@ int loadAllData(Stylist stylists[], int *stylistCount, int *nextStylistID, Servi
         status = 0;
     if (!loadServices(services, serviceCount, "services.bin"))
         status = 0;
-    if (!loadClients(clients, clientCount, nextClientID, "clients.bin"))
+    if (!loadClients(clients, clientCount, nextClientID, nextPetID, "clients.bin"))
         status = 0;
 
     return status;
@@ -115,10 +115,10 @@ int loadAllData(Stylist stylists[], int *stylistCount, int *nextStylistID, Servi
     @pre                : hasRecords should be an integer value 0 or 1.
    ================================================================= */
 void displayMenu(int hasRecords) {
-    printf("\nPet Salon System - Main Menu\n");
+    printf("\nPet Salon System\n\nMain Menu\n");
 
     if (hasRecords == 0) {      // If there are no records yet, show only Add and Exit
-        printf("1. Add\n");
+        printf("\n1. Add\n");
         printf("7. Exit\n");
     } else {                    // If there are records, show all main options
         printf("1. Add\n");
@@ -140,10 +140,10 @@ void displayMenu(int hasRecords) {
    ================================================================= */
 void displayAddMenu() {
     printf("\nAdd Options:\n");
-    printf("1. Add Client\n");
-    printf("2. Add Pet\n");
-    printf("3. Add Stylist\n");
-    printf("4. Add Service\n");
+    printf("1. Add Stylist\n");
+    printf("2. Add Service\n");
+    printf("3. Add Client\n");
+    printf("4. Add Pet\n");
     printf("5. Exit\n");
 }
 
@@ -189,7 +189,7 @@ int newClientID(Client clients[], int numClient) {
 void chooseCity(int *selectedCityIndex) {
     char *City[] = {"Manila", "Mandaluyong", "Marikina", "Pasig", "Quezon City",
                     "San Juan", "Caloocan", "Malabon", "Navotas", "Valenzuela",
-                    "Las Pinas", "Makati", "Muntinlupa", "Paranaque", "Pasay",
+                    "Las Piñas", "Makati", "Muntinlupa", "Parañaque", "Pasay",
                     "Pateros", "Taguig"};
     int i;
     int j;
@@ -197,26 +197,34 @@ void chooseCity(int *selectedCityIndex) {
     int choice;
 
     printf("Choose City/Municipality:\n");
-    
+
+    // Check through 4 rows to create vertical columns
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {
-            index = j * 4 + i;
+            // Calculate vertical column index
+            index = (j * 4) + i;
+            
+            // Add a space before "15. Pasay" (Col 4, Row 3) to align with 4th column
+            if (j == 3 && i == 2) {
+                printf(" "); 
+            }
+
+            // Column width: 4 (number) + 14 (string) = 18 chars total per column
             printf("%2d. %-14s", index + 1, City[index]);
         }
-
         printf("\n");
     }
 
-    printf("17. Taguig\n");
-    do{
+    // Print 3 empty columns worth of padding for 17 to be aligned with 13-16
+    printf("%54s17. Taguig\n", "");
+    
     printf("Enter Choice: ");
     scanf("%d", &choice);
-        if(choice<=0 || choice > 17)
-            printf("City does not exist.\n");
-    }while ( choice<=0 || choice > 17 );
 
-    // Store the index (choice - 1) to point into the City array later
-    *selectedCityIndex = choice - 1;
+    // Store the zero-based index for the pointer to the CityList index
+    if (choice >= 1 && choice <= 17) {
+        *selectedCityIndex = choice - 1;
+    }
 }
 
 /* =================================================================
@@ -284,7 +292,7 @@ Stylist* chooseStylist(Stylist stylists[], int numStylists) {
     }
 
     if (activeCount > 0) {
-        printf("Enter Choice: ");
+        printf("\nEnter Choice: ");
         scanf("%d", &choice);
 
         // Ensure the choice exists in the displayed list
@@ -295,14 +303,6 @@ Stylist* chooseStylist(Stylist stylists[], int numStylists) {
 
     return selectedStylist;
 }
-
-/* =================================================================
-    CLIENT CITY STORAGE
-    clientCity is a pointer, so it needs a place to store the value.
-    Each client gets its own storage space, so clientCity can point
-    to the correct storage for that client.
-   ================================================================= */
-static int clientCityStorage[MAX_CLIENTS];
 
 /* =================================================================
     ADD CLIENT
@@ -316,69 +316,61 @@ static int clientCityStorage[MAX_CLIENTS];
     @return             : none
     @pre                : clients, stylists arrays are initialized; numClients points to a valid int.  
    ================================================================= */
-void addClient(Client clients[], int *numClients, Stylist stylists[], int nStylists) {
+void addClient(Client clients[], int *numClients, Stylist stylists[], int nStylists, int clientCityStorage[]) {
     int numPetsToAssign;
     int currentIdx;
-    int clientID;
     int i;
 
     if (*numClients >= MAX_CLIENTS) {
         printf("The salon is at maximum capacity (20 clients). Cannot add more.\n");
     } else {
         currentIdx = *numClients;
-        printf("--- Add New Client ---\n");
+        printf("--- Add Client ---\n");
 
-        // 1. ID Generation: IDs are assigned sequentially starting at 1
-        clientID = newClientID(clients, *numClients);
-        clients[currentIdx].id_client = clientID;
+        // 1. ID Generation: Handled sequentially
+        clients[currentIdx].id_client = newClientID(clients, *numClients);
 
-        // 2. Name: Stored in format <Lastname>, <Firstname> (up to 200 chars)
-        printf("Name (Lastname, Firstname): ");
+        // 2. Name: format <Lastname>, <Firstname>
+        printf("Name: ");
         scanf(" %200[^\n]", clients[currentIdx].clientName);
 
-        // 3. City Selection: Restricted to NCR list
+        // 3. City Selection: Uses the corrected chooseCity logic for alignment
         clients[currentIdx].clientCity = &clientCityStorage[currentIdx];
         chooseCity(clients[currentIdx].clientCity);
-        printf("\n");
 
-        // 4. Recommender: Pointer to an existing client or NULL
+        // 4. Recommender: Displays "No clients yet" if empty
         clients[currentIdx].clientRecommender = selectRecommender(clients, *numClients, currentIdx);
 
-        // 5. Stylist Selection: Use algorithm for Full Requirement
-        printf("\nStylist Assignment: ");
+        // 5. Stylist Selection: Full Requirement Logic 
+        printf("Stylist:\n");
         if (clients[currentIdx].clientRecommender != NULL) {
+            // Recursive selection based on word-of-mouth points
             clients[currentIdx].chosenStylist = stylistSelectByPoints(stylists, nStylists, clients[currentIdx].clientRecommender);
-            printf("Recommended based on word-of-mouth: %s\n", clients[currentIdx].chosenStylist->name);
+            printf("Assigned Stylist: %s\n", clients[currentIdx].chosenStylist->name);
         } else {
-            // Manual selection if there is no recommendation chain
-            printf("No recommender found. Please select manually.\n");
+            // Manual Selection: Required if no recommendation chain exists
+            printf("No recommender, pick from the list below:\n");
             clients[currentIdx].chosenStylist = chooseStylist(stylists, nStylists);
         }
 
-        //Clear any nonexisting data from all 5 pet slots to avoid duplication of ID
-        for (i = 0; i < MAX_PETS_OWN; i++) {
-            clients[currentIdx].ClientPets[i].id_pet = 0;
-            clients[currentIdx].ClientPets[i].petName[0] = '\0';
-        }
-
         // 6. Pet Entry: At least one pet must be entered at this point
-        printf("\n--- Pet Registration ---\n");
+        printf("\nPets of Client\n");
         numPetsToAssign = 0;
         while (numPetsToAssign < 1 || numPetsToAssign > MAX_PETS_OWN) {
-            printf("Number of Pets (1-%d): ", MAX_PETS_OWN);
+            printf("Number of Pets: ");
             scanf("%d", &numPetsToAssign);
         }
 
         for (i = 0; i < numPetsToAssign; i++) {
-            // Add individual pet details to this client's record
-            addPetClient(clients, currentIdx, i, *numClients+1);
+            // Handles pet ID, Name, and Age (Years/Months) per sample
+            addPetClient(clients, currentIdx, i, *numClients);
         }
 
-        // Only increment the count if the client was actually added
         (*numClients)++;
-        printf("Client and pets successfully recorded.\n");
+        printf("Done.\n");
 
-        saveClients(clients, *numClients, "clients.bin");
+        // System-wide recovery save immediately after data input
+        triggerRecovery(stylists, nStylists, NULL, 0, clients, *numClients);
     }
 }
 
@@ -424,6 +416,7 @@ int newPetID(Client clients[], int numClients) {
     @pre                    : clients array is initialized; clientIdx and petIdx are within valid bounds.
    ================================================================= */
 void addPetClient(Client clients[], int clientIdx, int petIdx, int nTotalClients) {
+    int i;
     int assignedID;
 
     if (clientIdx >= 0 && petIdx >= 0 && petIdx < MAX_PETS_OWN) {
@@ -441,6 +434,11 @@ void addPetClient(Client clients[], int clientIdx, int petIdx, int nTotalClients
 
         printf("    Months: ");
         scanf("%d", &clients[clientIdx].ClientPets[petIdx].PetAge.months);
+
+        // Initialize all 5 service slots to empty
+        for (i = 0; i < 5; i++) {
+            clients[clientIdx].ClientPets[petIdx].ServicesAvailed[i].service_name[0] = '\0';
+        }
 
         // New pets start with an empty service history
         printf("Pet %s (ID: %d) added successfully.\n", clients[clientIdx].ClientPets[petIdx].petName, assignedID);
@@ -472,7 +470,7 @@ void addPet(Client clients[], int nTotalClients) {
             printf("%d. %s\n", i + 1, clients[i].clientName);
         }
 
-        printf("Enter Choice: ");
+        printf("\nEnter Choice: ");
         scanf("%d", &clientChoice);
         clientIdx = clientChoice - 1;
 
@@ -489,9 +487,6 @@ void addPet(Client clients[], int nTotalClients) {
             if (petSlotIdx != -1) {
                 addPetClient(clients, clientIdx, petSlotIdx, nTotalClients);
                 printf("Pet record successfully added to %s.\n", clients[clientIdx].clientName);
-
-                saveClients(clients, nTotalClients, "clients.bin");
-
             } else {
                 printf("Error: This client already has the maximum of 5 pets.\n");
             }
@@ -620,7 +615,7 @@ Client* selectRecommender(Client clients[], int nClients, int currentIdx) {
             }
         }
 
-        printf("Enter Choice: ");
+        printf("\nEnter Choice: ");
         scanf("%d", &selection);
 
         // Check if the choice matches a valid existing client
@@ -644,10 +639,10 @@ Client* selectRecommender(Client clients[], int nClients, int currentIdx) {
    ================================================================= */
 void displayEditMenu() {
     printf("\nEdit Options:\n");
-    printf("1. Edit Client\n");
-    printf("2. Edit Pet\n");
-    printf("3. Edit Stylist\n");
-    printf("4. Edit Service\n");
+    printf("1. Edit Stylist\n");
+    printf("2. Edit Service\n");
+    printf("3. Edit Client\n");
+    printf("4. Edit Pet\n");
     printf("5. Exit\n");
 }
 
@@ -662,13 +657,13 @@ void displayEditMenu() {
     @return                 : none
     @pre                    : clients and stylists arrays are initialized; nTotalClients > 0.
    ================================================================= */
-void editClient(Client clients[], int nTotalClients, Stylist stylists[], int nTotalStylists) {
+void editClient(Client clients[], int nTotalClients, Stylist stylists[], int nTotalStylists, int clientCityStorage[]) {
     int i;
     int selection;
     int clientIdx;
     char *CityList[] = {"Manila", "Mandaluyong", "Marikina", "Pasig", "Quezon City",
                         "San Juan", "Caloocan", "Malabon", "Navotas", "Valenzuela",
-                        "Las Pinas", "Makati", "Muntinlupa", "Paranaque", "Pasay",
+                        "Las Piñas", "Makati", "Muntinlupa", "Parañaque", "Pasay",
                         "Pateros", "Taguig"};
 
     printf("--- Edit Client Record ---\n");
@@ -676,7 +671,7 @@ void editClient(Client clients[], int nTotalClients, Stylist stylists[], int nTo
         printf("%d. %s\n", i + 1, clients[i].clientName);
     }
 
-    printf("Enter Choice: ");
+    printf("\nEnter Choice: ");
     scanf("%d", &selection);
 
     clientIdx = selection - 1;
@@ -709,8 +704,6 @@ void editClient(Client clients[], int nTotalClients, Stylist stylists[], int nTo
 
         printf("Select New Preferred Stylist:\n");
         clients[clientIdx].chosenStylist = chooseStylist(stylists, nTotalStylists);
-
-        saveClients(clients, nTotalClients, "clients.bin");
 
         printf("Client record updated successfully.\n");
     }
@@ -754,7 +747,7 @@ void editPet(Client clients[], int nTotalClients) {
     if (displayCount > 1) {
         int internalCount;
 
-        printf("Enter choice to edit: ");
+        printf("\nEnter choice to edit: ");
         scanf("%d", &petChoice);
 
         // Find the pet selected by its position in the list
@@ -784,7 +777,7 @@ void editPet(Client clients[], int nTotalClients) {
                     }
                 }
 
-                printf("Enter choice: ");
+                printf("\nEnter choice: ");
                 scanf("%d", &newOwnerChoice);
                 newOwnerIdx = newOwnerChoice - 1;
 
@@ -822,7 +815,6 @@ void editPet(Client clients[], int nTotalClients) {
             scanf("%d", &clients[foundClientIdx].ClientPets[foundPetIdx].PetAge.months);
             
             printf("Pet record updated.\n");
-            saveClients(clients, nTotalClients, "clients.bin");
         }
     } else {
         printf("No pets currently recorded in the system.\n");
@@ -932,7 +924,7 @@ void deleteClient(Client clients[], int *nTotalClients) {
         printf("%d. %s\n", i + 1, clients[i].clientName);
     }
 
-    printf("Enter Choice: ");
+    printf("\nEnter Choice: ");
     scanf("%d", &selection);
     targetIdx = selection - 1;
 
@@ -944,13 +936,6 @@ void deleteClient(Client clients[], int *nTotalClients) {
         if (confirm == 'Y' || confirm == 'y') {
             // Inform the user about the client and pet removal
             printf("Client %s has been removed from the system.\n", clients[targetIdx].clientName);
-
-            //NULL its' recommender pointer for all clients that have the deleted client as their recommender
-            for (i = 0; i < *nTotalClients; i++) {
-                if (clients[i].clientRecommender == &clients[targetIdx]) {
-                clients[i].clientRecommender = NULL;
-                }
-            }
 
             // Check through the fixed 5-pet array to announce pet deletion
             for (j = 0; j < MAX_PETS_OWN; j++) {
@@ -964,17 +949,8 @@ void deleteClient(Client clients[], int *nTotalClients) {
                 clients[i] = clients[i + 1];
             }
 
-            // Decrement the total client count 
+            // Decrement the total client count */
             *nTotalClients -= 1;
-
-            //ensure the last client record is cleared to avoid duplicate IDs
-            clients[*nTotalClients].id_client = 0;
-            for (j = 0; j < MAX_PETS_OWN; j++) {
-                clients[*nTotalClients].ClientPets[j].id_pet = 0;
-            }
-
-            saveClients(clients, *nTotalClients, "clients.bin");
-
             printf("Deletion complete.\n");
         } else {
             printf("Deletion cancelled.\n");
@@ -1017,7 +993,7 @@ void deletePets(Client clients[], int nTotalClients) {
     }
 
     if (displayCount > 1) {
-        printf("Enter Choice: ");
+        printf("\nEnter Choice: ");
         scanf("%d", &userChoice);
 
         // Re-scan to find which client and index match the user's choice
@@ -1051,10 +1027,7 @@ void deletePets(Client clients[], int nTotalClients) {
 
                 // Clear the last slot to ensure it is marked as empty
                 clients[foundClientIdx].ClientPets[MAX_PETS_OWN - 1].id_pet = 0;
-                //subtract the number of pets for the client
-                clients[foundClientIdx].numPets--;
-                saveClients(clients, nTotalClients, "clients.bin");
-
+                
                 printf("Done.\n");
             } else {
                 printf("Deletion cancelled.\n");
@@ -1326,10 +1299,12 @@ int findServiceIndex(Service services[], int serviceCount, const char *serviceNa
     BOOK SERVICE
     Books a service booking for both a stylist and a pet.
 
-    @param stylists[]   : stylist records
+    @param stylists[]   : Array for stylist records
     @param stylistCount : Number of stylists in the system
-    @param services[]   : service records
+    @param services[]   : Array for service records
     @param serviceCount : Number of services in the system
+    @param clients[]    : Array for client records
+    @param clientCount  : Number of clients
     @param *targetPet   : Pointer to the pet availing the service
     @param stylistID    : ID of the stylist performing the service
     @param serviceName  : Name of the service being availed
@@ -1337,8 +1312,8 @@ int findServiceIndex(Service services[], int serviceCount, const char *serviceNa
     @return             : None
     @pre                : targetPet and date are not null so arrays are initialized.
    ================================================================= */
-void bookService(Stylist stylists[], int stylistCount, Service services[], int serviceCount, Pet *targetPet, int stylistID,
-                 const char *serviceName, Date date) {
+void bookService(Stylist stylists[], int stylistCount, Service services[], int serviceCount, Client clients[], int clientCount,
+                 Pet *targetPet, int stylistID, const char *serviceName, Date date) {
     int i;
     int foundStylist = 0;
     int foundService = 0;
@@ -1394,8 +1369,8 @@ void bookService(Stylist stylists[], int stylistCount, Service services[], int s
             }
 
             printf("Booking successful for %s!\n", targetPet->petName);
-            // bookService only has access to the pet, so it can't save the full clients[] array.
-            saveStylists(stylists, stylistCount, "stylists.bin");
+            // System-wide recovery save immediately after data input
+            triggerRecovery(stylists, stylistCount, services, serviceCount, clients, clientCount);
         }
     } else {
         printf("Error: Stylist or Service not found/active.\n");
@@ -1475,8 +1450,7 @@ void displayReportMenu(Client clients[], int nClients, Stylist stylists[], int n
     printf("2. Services Rendered by a Stylist\n");
     printf("3. Pets by Owner\n");
     printf("4. Salaries versus Income\n");
-    printf("5. Exit Submenu\n");
-    printf("Enter choice: ");
+    printf("\nEnter choice: ");
     scanf("%d", &nChoice);
 
     if (nChoice == 1) {
@@ -2000,18 +1974,23 @@ int loadServices(Service services[], int *serviceCount, const char *filename) {
     @return             : 1 if save was successful, 0 otherwise
     @pre                : clients array is initialized so clientCount is non-negative
    ================================================================= */
-int saveClients(Client clients[], int clientCount, const char *filename) {
-    FILE *fp = fopen(filename, "wb");
-    
-    if(fp == NULL){
-        return 0;
+int saveClients(Client clients[], int nClientCount, const char *szFilename) {
+    FILE *fp = NULL;
+    int nSuccess = 0;
+
+    fp = fopen(szFilename, "wb");
+
+    if (fp != NULL) {
+        // Write the count first so the loader knows how many to read
+        fwrite(&nClientCount, sizeof(int), 1, fp);
+        // Write the entire array of client records (including nested pets)
+        fwrite(clients, sizeof(Client), nClientCount, fp);
+        
+        fclose(fp);
+        nSuccess = 1;
     }
 
-    fwrite(&clientCount, sizeof(int), 1, fp);
-    fwrite(clients, sizeof(Client), clientCount, fp);
-
-    fclose(fp);
-    return 1;
+    return nSuccess;
 }
 
 /* =================================================================
@@ -2021,32 +2000,56 @@ int saveClients(Client clients[], int clientCount, const char *filename) {
     @param clients[]        : Array to load client records into
     @param *clientCount     : Pointer to an integer to store the number of clients loaded
     @param *nextClientID    : Pointer to an integer to store the next available client ID
+    @param *nextPetID       : Pointer to an integer to store the next available pet ID
     @param *filename        : The name of the binary file to load from
     @return                 : 1 if load was successful, 0 otherwise
-    @pre                    : clients array is initialized; clientCount and nextClientID are valid pointers
+    @pre                    : clients array is initialized; clientCount, nextClientID, and next
    ================================================================= */
-int loadClients(Client clients[], int *clientCount, int *nextClientID, const char *filename) {
-    
-    FILE *fp = fopen(filename, "rb");
+int loadClients(Client clients[], int *pCount, int *pNextID, int *pNextPetID, const char *szFilename) {
+    FILE *fp = NULL;
     int i;
-    int maxClientID = 0;
+    int j;
+    int maxCID = 0;
+    int maxPID = 0;
 
-    if(fp == NULL){
-        *clientCount = 0;
-        if(nextClientID != NULL) *nextClientID = 1;
-        return 1;
+    fp = fopen(szFilename, "rb");
+
+    if (fp == NULL) {
+        // If no file exists, start with 0 records and IDs at 1
+        *pCount = 0;
+        if (pNextID != NULL) {
+            *pNextID = 1;
+        }
+        if (pNextPetID != NULL) {
+            *pNextPetID = 1;
+        }
+    } else {
+        // Load the count and the array from the file
+        fread(pCount, sizeof(int), 1, fp);
+        fread(clients, sizeof(Client), *pCount, fp);
+        fclose(fp);
+
+        // Restore sequential ID trackers by finding the highest IDs used
+        for (i = 0; i < *pCount; i++) {
+            if (clients[i].id_client > maxCID) {
+                maxCID = clients[i].id_client;
+            }
+
+            // Scan nested pets to restore the global pet ID tracker
+            for (j = 0; j < MAX_PETS_OWN; j++) {
+                if (clients[i].ClientPets[j].id_pet > maxPID) {
+                    maxPID = clients[i].ClientPets[j].id_pet;
+                }
+            }
+        }
+
+        if (pNextID != NULL) {
+            *pNextID = maxCID + 1;
+        }
+        if (pNextPetID != NULL) {
+            *pNextPetID = maxPID + 1;
+        }
     }
-
-    fread(clientCount,sizeof(int), 1, fp);
-    fread(clients,sizeof(Client),*clientCount, fp);
-    fclose(fp);
-
-    for(i=0;i<*clientCount;i++){
-        if(clients[i].id_client > maxClientID)
-            maxClientID = clients[i].id_client;
-    }
-
-    if (nextClientID != NULL) *nextClientID = maxClientID + 1;
 
     return 1;
 }
@@ -2054,200 +2057,452 @@ int loadClients(Client clients[], int *clientCount, int *nextClientID, const cha
 /* =================================================================
     MAIN
     For testing the Pet Salon system implemented above.
-    Wires the various Add/Edit/Delete/Book/End Month/Report
-    functions to the menu functions already defined in this file.
+    Wires the Add/Edit/Delete/Book/End Month/Report functions
+    to the menu functions already defined in this file.
    ================================================================= */
-int main(void) {
-    static Stylist stylists[MAX_STYLISTS];
-    static Service services[MAX_SERVICES];
-    static Client  clients[MAX_CLIENTS];
+int main() {
+    // VARIABLE DECLARATIONS
+    Stylist stylists[MAX_STYLISTS];
+    Service services[MAX_SERVICES];
+    Client clients[MAX_CLIENTS];
 
-    int stylistCount = 0, serviceCount = 0, clientCount = 0;
-    int nextStylistID = 1, nextClientID = 1, nextPetID = 1;
+    int stylistCount = 0;
+    int serviceCount = 0;
+    int clientCount = 0;
 
-    int running = 1;
-    int mainChoice;
+    int nextStylistID = 1;
+    int nextClientID = 1;
+    int nextPetID = 1;
 
-    int i;
+    int mainChoice = 0;
+    int addChoice = 0;
+    int editChoice = 0;
+    int deleteChoice = 0;
 
-    printf("=== Pet Salon Tracking System ===\n");
-    loadAllData(stylists, &stylistCount, &nextStylistID, services, &serviceCount,
-                clients, &clientCount, &nextClientID, &nextPetID);
+    int hasRecords;
 
-    while (running) {
-        int hasRecords = (stylistCount > 0 || serviceCount > 0 || clientCount > 0);
+    char name[MAX_NAME_LEN + 1];
+    char description[MAX_DESC_LEN + 1];
+    char newName[MAX_NAME_LEN + 1];
+    char newDescription[MAX_DESC_LEN + 1];
+
+    float price;
+    int stylistID;
+    int serviceIndex;
+    int clientCityStorage[MAX_CLIENTS];
+
+    /* =================================================================
+            LOAD ALL DATA
+       ================================================================= */
+    loadAllData(stylists, &stylistCount, &nextStylistID, services, &serviceCount, clients, &clientCount, &nextClientID, &nextPetID);
+
+    // MAIN MENU LOOP
+    // The menu changes depending on whether there are any records
+    while (mainChoice != 7) {
+
+        // The MCO says Edit/Delete/etc. become available if there is at least one record of any type.
+        hasRecords = (clientCount > 0 || stylistCount > 0 || serviceCount > 0);
+
         displayMenu(hasRecords);
-        printf("Enter Choice: ");
-        if (scanf("%d", &mainChoice) != 1) break;
 
-        switch (mainChoice) {
-            case 1: { // Add
-                int addChoice;
+        printf("\nEnter choice: ");
+        scanf("%d", &mainChoice);
+
+        /* =================================================================
+            ADD
+           ================================================================= */
+        if (mainChoice == 1) {
+
+            addChoice = 0;
+
+            while (addChoice != 5) {
+
                 displayAddMenu();
-                printf("Enter Choice: ");
+
+                printf("\nEnter choice: ");
                 scanf("%d", &addChoice);
 
                 if (addChoice == 1) {
-                    addClient(clients, &clientCount, stylists, stylistCount);
-                } else if (addChoice == 2) {
-                    addPet(clients, clientCount);
-                } else if (addChoice == 3) {
-                    char name[MAX_NAME_LEN + 1];
-                    printf("Stylist Name (Lastname, Firstname): ");
+
+                    // ADD STYLIST
+                    printf("Add Stylist\n");
+                    printf("Name: ");
                     scanf(" %200[^\n]", name);
+
                     addStylist(stylists, &stylistCount, &nextStylistID, name);
-                } else if (addChoice == 4) {
-                    char name[MAX_NAME_LEN + 1];
-                    char desc[MAX_DESC_LEN + 1];
-                    float price;
-                    printf("Service Name: ");
+
+                } else if (addChoice == 2) {
+
+                    // ADD SERVICE
+                    printf("Add Service\n");
+
+                    printf("Name: ");
                     scanf(" %200[^\n]", name);
+
                     printf("Description: ");
-                    scanf(" %300[^\n]", desc);
-                    do {
-                        printf("Price: ");
-                        scanf("%f", &price);
-                        if (!validPriceCheck(price)) printf("Price must be >= 0.\n");
-                    } while (!validPriceCheck(price));
-                    addService(services, &serviceCount, name, desc, price);
+                    scanf(" %300[^\n]", description);
+
+                    printf("Price: ");
+                    scanf("%f", &price);
+
+                    if (validPriceCheck(price)) {
+                        addService(services, &serviceCount, name, description, price);
+                    } else {
+                        printf("Invalid price.\n");
+                    }
+
+                } else if (addChoice == 3) {
+
+                    // ADD CLIENT
+                    addClient(clients, &clientCount, stylists, stylistCount, clientCityStorage);
+
+                } else if (addChoice == 4) {
+
+                     // ADD PET
+                    addPet(clients, clientCount);
+
+                } else if (addChoice != 5) {
+
+                    printf("Invalid choice.\n");
                 }
-                break;
             }
-            case 2: { // Edit
-                int editChoice;
+
+        /* =================================================================
+            EDIT
+           ================================================================= */
+        } else if (mainChoice == 2 && hasRecords) {
+
+            editChoice = 0;
+
+            while (editChoice != 5) {
+
                 displayEditMenu();
-                printf("Enter Choice: ");
+
+                printf("\nEnter choice: ");
                 scanf("%d", &editChoice);
 
                 if (editChoice == 1) {
-                    editClient(clients, clientCount, stylists, stylistCount);
+
+                    // EDIT STYLIST
+                    if (stylistCount > 0) {
+
+                        printf("Edit Stylist\n");
+
+                        for (serviceIndex = 0; serviceIndex < stylistCount; serviceIndex++) {
+                            printf("%d. %s\n", serviceIndex + 1, stylists[serviceIndex].name);
+                        }
+
+                        printf("\nEnter choice: ");
+                        scanf("%d", &stylistID);
+
+                        if (stylistID >= 1 && stylistID <= stylistCount) {
+
+                            printf("New Name: ");
+                            scanf(" %200[^\n]", newName);
+
+                            editStylist(stylists, stylistCount, stylists[stylistID - 1].stylistID, newName);
+                        }
+                    }
+
                 } else if (editChoice == 2) {
-                    editPet(clients, clientCount);
+
+                    // EDIT SERVICE
+                    if (serviceCount > 0) {
+
+                        printf("Edit Service\n");
+
+                        for (serviceIndex = 0; serviceIndex < serviceCount; serviceIndex++) {
+
+                            printf("%d. %s\n", serviceIndex + 1, services[serviceIndex].name);
+                        }
+
+                        printf("\nEnter choice: ");
+                        scanf("%d", &serviceIndex);
+
+                        if (serviceIndex >= 1 && serviceIndex <= serviceCount) {
+
+                            serviceIndex--;
+
+                            printf("New Description: ");
+                            scanf(" %300[^\n]", newDescription);
+
+                            printf("New Price: ");
+                            scanf("%f", &price);
+
+                            if (validPriceCheck(price)) {
+
+                                editService(services, serviceCount, services[serviceIndex].name, newDescription, price
+                                );
+
+                            } else {
+                                printf("Invalid price.\n");
+                            }
+                        }
+                    }
+
                 } else if (editChoice == 3) {
-                    int id; char newName[MAX_NAME_LEN + 1];
 
-                    for(i=0;i<stylistCount;i++){
-                        if(stylists[i].isActive==1)
-                        printf("%d. %s\n", stylists[i].stylistID, stylists[i].name);
+                    // EDIT CLIENT
+                    if (clientCount > 0) {
+                        editClient(clients, clientCount, stylists, stylistCount, clientCityStorage);
                     }
 
-                    printf("Stylist ID to edit: ");
-                    scanf("%d", &id);
-                    printf("New Name: ");
-                    scanf(" %200[^\n]", newName);
-                    editStylist(stylists, stylistCount, id, newName);
                 } else if (editChoice == 4) {
-                    char name[MAX_NAME_LEN + 1], newDesc[MAX_DESC_LEN + 1];
-                    float newPrice;
 
-                    for(i=0;i<serviceCount;i++){
-                        printf("%d. %s (PHP %.2f)\n", i + 1, services[i].name, services[i].price);
+                    // EDIT PET
+                    if (clientCount > 0) {
+                        editPet(clients, clientCount);
                     }
 
-                    printf("Service Name to edit: ");
-                    scanf(" %200[^\n]", name);
-                    printf("New Description: ");
-                    scanf(" %300[^\n]", newDesc);
-                    printf("New Price: ");
-                    scanf("%f", &newPrice);
-                    editService(services, serviceCount, name, newDesc, newPrice);
+                } else if (editChoice != 5) {
+
+                    printf("Invalid choice.\n");
                 }
-                break;
             }
-            case 3: { // Delete
-                int delChoice;
+
+        /* =================================================================
+            DELETE
+           ================================================================= */
+        } else if (mainChoice == 3 && hasRecords) {
+
+            deleteChoice = 0;
+
+            while (deleteChoice != 5) {
+
                 displayDeleteMenu();
-                printf("Enter Choice: ");
-                scanf("%d", &delChoice);
 
-                if (delChoice == 1) {
-                    deleteClient(clients, &clientCount);
-                } else if (delChoice == 2) {
-                    deletePets(clients, clientCount);
-                } else if (delChoice == 3) {
-                    int id;
-                    printf("Stylist ID to delete: ");
-                    scanf("%d", &id);
-                    deleteStylist(stylists, stylistCount, id);
-                } else if (delChoice == 4) {
-                    char name[MAX_NAME_LEN + 1];
-                    printf("Service Name to delete: ");
-                    scanf(" %200[^\n]", name);
-                    deleteService(services, serviceCount, name);
+                printf("\nEnter choice: ");
+                scanf("%d", &deleteChoice);
+
+                if (deleteChoice == 1) {
+
+                    // DELETE STYLIST
+                    if (stylistCount > 0) {
+
+                        printf("Delete Stylist\n");
+
+                        for (serviceIndex = 0; serviceIndex < stylistCount; serviceIndex++) {
+
+                            printf("%d. %s\n", serviceIndex + 1, stylists[serviceIndex].name);
+                        }
+
+                        printf("\nEnter choice: ");
+                        scanf("%d", &stylistID);
+
+                        if (stylistID >= 1 && stylistID <= stylistCount) {
+
+                            deleteStylist(stylists, stylistCount, stylists[stylistID - 1].stylistID);
+                        }
+                    }
+
+                } else if (deleteChoice == 2) {
+
+                    // DELETE SERVICE
+                    if (serviceCount > 0) {
+
+                        printf("Delete Service\n");
+
+                        for (serviceIndex = 0; serviceIndex < serviceCount; serviceIndex++) {
+
+                            printf("%d. %s\n", serviceIndex + 1, services[serviceIndex].name);
+                        }
+
+                        printf("\nEnter choice: ");
+                        scanf("%d", &serviceIndex);
+
+                        if (serviceIndex >= 1 && serviceIndex <= serviceCount) {
+
+                            deleteService(services, serviceCount, services[serviceIndex - 1].name);
+                        }
+                    }
+
+                } else if (deleteChoice == 3) {
+
+                    // DELETE CLIENT
+                    if (clientCount > 0) {
+                        deleteClient(clients, &clientCount);
+                    }
+
+                } else if (deleteChoice == 4) {
+
+                    // DELETE PET
+                    if (clientCount > 0) {
+                        deletePets(clients, clientCount);
+                    }
+
+                } else if (deleteChoice != 5) {
+
+                    printf("Invalid choice.\n");
                 }
-                break;
             }
-            case 4: { // Book
-                int clientChoice, clientIdx, petChoice, stylistID;
-                char serviceName[MAX_NAME_LEN + 1];
-                Date date;
-                int i;
 
-                if (clientCount == 0) {
-                    printf("No clients recorded yet.\n");
-                    break;
-                }
+        /* =================================================================
+            BOOK
+           ================================================================= */
+        } else if (mainChoice == 4 && hasRecords) {
 
-                printf("--- Book a Service ---\n");
-                for (i = 0; i < clientCount; i++) {
-                    printf("%d. %s\n", i + 1, clients[i].clientName);
-                }
-                printf("Select Client: ");
-                scanf("%d", &clientChoice);
-                clientIdx = clientChoice - 1;
+            /*
+                The Book section needs to collect:
+                1. Date
+                2. Client
+                3. Pet
+                4. Service
 
-                if (clientIdx < 0 || clientIdx >= clientCount) {
-                    printf("Invalid client.\n");
-                    break;
-                }
+                Then it calls the bookService() function.
+            */
 
-                for(i=0;i<MAX_PETS_OWN;i++){
-                    if(clients[clientIdx].ClientPets[i].id_pet>0){
-                        printf("%d. %s (ID: %d)\n", i + 1, clients[clientIdx].ClientPets[i].petName, clients[clientIdx].ClientPets[i].id_pet);
+            Date date;
+
+            int monthChoice;
+            int clientChoice;
+            int petChoice;
+            int clientIdx;
+            int petIdx;
+            int petCounter;
+            int serviceChoice;
+            int serviceCounter;
+            int selectedServiceIndex;
+
+            printf("Enter Date:\n");
+
+            printf("Day: ");
+            scanf("%d", &date.day);
+
+            printf("Select Month:\n");
+            printf(" 1. January    5. May       9. September\n");
+            printf(" 2. February   6. June     10. October\n");
+            printf(" 3. March      7. July     11. November\n");
+            printf(" 4. April      8. August   12. December\n");
+
+            printf("\nEnter choice: ");
+            scanf("%d", &monthChoice);
+
+            date.month = monthChoice;
+
+            printf("Year: ");
+            scanf("%d", &date.year);
+
+            // SELECT CLIENT
+            printf("Select Client:\n");
+
+            for (clientIdx = 0; clientIdx < clientCount; clientIdx++) {
+
+                printf("%d. %s\n", clientIdx + 1, clients[clientIdx].clientName);
+            }
+
+            printf("\nEnter choice: ");
+            scanf("%d", &clientChoice);
+
+            clientIdx = clientChoice - 1;
+
+            // SELECT PET
+            if (clientIdx >= 0 && clientIdx < clientCount) {
+
+                printf("Select Pet:\n");
+
+                petCounter = 0;
+
+                for (petIdx = 0; petIdx < MAX_PETS_OWN; petIdx++) {
+
+                    if (clients[clientIdx].ClientPets[petIdx].id_pet > 0) {
+
+                        petCounter++;
+
+                        printf("%d. %s\n", petCounter, clients[clientIdx].ClientPets[petIdx].petName);
                     }
                 }
-                printf("Select Pet Slot (1-%d): ", MAX_PETS_OWN);
+
+                printf("\nEnter choice: ");
                 scanf("%d", &petChoice);
-                if (petChoice < 1 || petChoice > MAX_PETS_OWN ||
-                    clients[clientIdx].ClientPets[petChoice - 1].id_pet == 0) {
-                    printf("Invalid pet slot.\n");
-                    break;
+
+                // Convert displayed pet number into actual array index.
+                petCounter = 0;
+                petIdx = -1;
+
+                for (serviceIndex = 0; serviceIndex < MAX_PETS_OWN; serviceIndex++) {
+
+                    if (clients[clientIdx].ClientPets[serviceIndex].id_pet > 0) {
+
+                        petCounter++;
+
+                        if (petCounter == petChoice) {
+                            petIdx = serviceIndex;
+                        }
+                    }
                 }
 
-                //no need to ask for stylist to book since the stylist is already chosen by the client
-                stylistID = clients[clientIdx].chosenStylist->stylistID;
-                printf("Stylist: %s\n", clients[clientIdx].chosenStylist->name);
+                // SELECT OFFERED SERVICE
+                if (petIdx >= 0) {
 
-                //add a list of services and allow them to choose by its number from the list of services
-                printf("Select Service:\n");
-                for(i=0;i<serviceCount;i++){
-                    printf("%d. %s (PHP %.2f)\n", i + 1, services[i].name, services[i].price);
+                    printf("Select Service:\n");
+
+                    serviceCounter = 0;
+
+                    for (serviceIndex = 0; serviceIndex < serviceCount; serviceIndex++) {
+
+                        if (services[serviceIndex].isOffered) {
+
+                            serviceCounter++;
+
+                            printf("%d. %s\n", serviceCounter, services[serviceIndex].name);
+                        }
+                    }
+
+                    printf("\nEnter choice: ");
+                    scanf("%d", &serviceChoice);
+
+                    serviceCounter = 0;
+                    selectedServiceIndex = -1;
+
+                    for (serviceIndex = 0; serviceIndex < serviceCount; serviceIndex++) {
+
+                        if (services[serviceIndex].isOffered) {
+
+                            serviceCounter++;
+
+                            if (serviceCounter == serviceChoice) {
+                                selectedServiceIndex = serviceIndex;
+                            }
+                        }
+                    }
+
+                    // Book using the client's preferred stylist.
+                    if (selectedServiceIndex >= 0 && clients[clientIdx].chosenStylist != NULL) {
+
+                        bookService(stylists, stylistCount, services, serviceCount, clients, clientCount, &clients[clientIdx].ClientPets[petIdx],
+                            clients[clientIdx].chosenStylist->stylistID, services[selectedServiceIndex].name, date);
+                    }
                 }
-                printf("Service Name: ");
-                scanf(" %200[^\n]", serviceName);
-                printf("Date (day month year): ");
-                scanf("%d %d %d", &date.day, &date.month, &date.year);
-
-                bookService(stylists, stylistCount, services, serviceCount,
-                            &clients[clientIdx].ClientPets[petChoice - 1], stylistID, serviceName, date);
-
-                saveClients(clients, clientCount, "clients.bin");
-                break;
             }
-            case 5: // End Month
-                endMonth(stylists, stylistCount);
-                break;
-            case 6: // Generate Reports
-                displayReportMenu(clients, clientCount, stylists, stylistCount, services, serviceCount);
-                break;
-            case 7: // Exit
-                triggerRecovery(stylists, stylistCount, services, serviceCount, clients, clientCount);
-                printf("Data saved. Goodbye!\n");
-                running = 0;
-                break;
-            default:
-                printf("Invalid choice.\n");
-                break;
+
+        /* =================================================================
+            END MONTH
+           ================================================================= */
+        } else if (mainChoice == 5 && hasRecords) {
+
+            endMonth(stylists, stylistCount);
+
+        /* =================================================================
+            GENERATE REPORTS
+           ================================================================= */
+        } else if (mainChoice == 6 && hasRecords) {
+
+            displayReportMenu(clients, clientCount, stylists, stylistCount, services, serviceCount);
+
+        /* =================================================================
+            EXIT
+           ================================================================= */
+        } else if (mainChoice == 7) {
+
+            printf("Saving...\n");
+
+            saveAllData(stylists, stylistCount, services, serviceCount, clients, clientCount);
+
+            printf("\nGoodbye!\n");
+
+        } else {
+
+            printf("Invalid choice.\n");
         }
     }
 
